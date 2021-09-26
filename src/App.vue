@@ -1,7 +1,7 @@
 <template>
 	<div class="app">
 		<div class="calculator">
-			<Answer :answer="answer"/>
+			<Answer :answer="answerView"/>
 			<div class="numbers">
 				<Button v-for="item in buttons" :button="item" @click="setAnswer"/>
 			</div>
@@ -39,25 +39,66 @@ export default {
 			{text: '3', type: 'number'},
 			{text: '+', type: 'operation'},
 			{text: '0', type: 'number'},
-			{text: ',', type: 'number'},
+			{text: '', type: 'point'},
 			{text: '=', type: 'operation'}
 		]
 		let answer = ref('0')
+		let answerView = ref('0')
+		const isFirstSymbol = () => {
+			return answer.value === '0'
+		}
+		const isInclude = (symbol) => {
+			return (answer.value.split(' ').includes(symbol))
+		}
+		const count = () => {
+			let a = +answer.value.split(' ')[0]
+			let b = +answer.value.split(' ')[2]
+
+			if (isInclude('+')) {
+				answer.value = (a + b).toString()
+			}
+			if (isInclude('-')) {
+				answer.value = (a - b).toString()
+			}
+
+		}
 		const setAnswer = (value) => {
 			switch (value.type) {
 				case ('number'):
-					if (answer.value === '0') {
-						if (value.text === ',') answer.value = '0.'
-						else answer.value = value.text
-					} else answer.value += value.text
+					answer.value = isFirstSymbol() ? value.text : answer.value + value.text
+					answerView.value = answer.value
 					break
 				case ('function'):
 					answer.value = '0'
+					answerView.value = answer.value
 					break
-
+				case ('operation'):
+					switch (value.text) {
+						case ('+/-'):
+							if (isFirstSymbol()) answer.value = '-'
+							else if (answer.value[0] !== '-') `-${answer.value}`
+							answerView.value = answer.value
+							break
+						case ('%'):
+							break
+						case ('+'):
+							count()
+							if (!isFirstSymbol()) answer.value += ' + '
+							answerView.value = answer.value
+							break
+						case ('-'):
+							count()
+							if (!isFirstSymbol()) answer.value += ' - '
+							answerView.value = answer.value
+							break
+						case ('='):
+							count()
+							answerView.value = answer.value
+							break
+					}
 			}
 		}
-		return {setAnswer, answer, buttons}
+		return {setAnswer, answer, buttons, answerView}
 	}
 }
 </script>
